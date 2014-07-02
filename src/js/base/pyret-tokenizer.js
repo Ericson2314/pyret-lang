@@ -119,22 +119,6 @@ define(["../../../lib/jglr/jglr"], function(E) {
   const semi = new RegExp("^;", STICKY_REGEXP);
   const backslash = new RegExp("^\\\\", STICKY_REGEXP);
 
-  const opplus = new RegExp(op("\\+"), STICKY_REGEXP);
-  const opminus = new RegExp(op("-"), STICKY_REGEXP);
-  const optimes = new RegExp(op("\\*"), STICKY_REGEXP);
-  const opdiv = new RegExp(op("/"), STICKY_REGEXP);
-  const opleq = new RegExp(op("<="), STICKY_REGEXP);
-  const opgeq = new RegExp(op(">="), STICKY_REGEXP);
-  const opeq = new RegExp(op("=="), STICKY_REGEXP);
-  const opneq = new RegExp(op("<>"), STICKY_REGEXP);
-  const oplt = new RegExp(op("<"), STICKY_REGEXP);
-  const opgt = new RegExp(op(">"), STICKY_REGEXP);
-  const opand = new RegExp(op("and"), STICKY_REGEXP);
-  const opor = new RegExp(op("or"), STICKY_REGEXP);
-  const opis = new RegExp(op("is"), STICKY_REGEXP);
-  const opsatisfies = new RegExp(op("satisfies"), STICKY_REGEXP);
-  const opraises = new RegExp(op("raises"), STICKY_REGEXP);
-
   const slashable = "[\\\\nrt\"\']"
   const tquot_str =
     new RegExp("^```(?:" +
@@ -232,21 +216,21 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "STRING", val: dquot_str},
     {name: "STRING", val: squot_str},
 
-    {name: "PLUS", val: opplus, parenIsForExp: true},
-    {name: "DASH", val: opminus, parenIsForExp: true},
-    {name: "STAR", val: optimes, parenIsForExp: true},
-    {name: "SLASH", val: opdiv, parenIsForExp: true},
-    {name: "LEQ", val: opleq, parenIsForExp: true},
-    {name: "GEQ", val: opgeq, parenIsForExp: true},
-    {name: "EQUALEQUAL", val: opeq, parenIsForExp: true},
-    {name: "NEQ", val: opneq, parenIsForExp: true},
-    {name: "LT", val: oplt, parenIsForExp: true},
-    {name: "GT", val: opgt, parenIsForExp: true},
-    {name: "AND", val: opand, parenIsForExp: true},
-    {name: "OR", val: opor, parenIsForExp: true},
-    {name: "IS", val: opis, parenIsForExp: true},
-    {name: "SATISFIES", val: opsatisfies, parenIsForExp: true},
-    {name: "RAISES", val: opraises, parenIsForExp: true},
+    {name: "PLUS", val: new RegExp(op("\\+"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "DASH", val: new RegExp(op("-"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "STAR", val: new RegExp(op("\\*"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "SLASH", val: new RegExp(op("/"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "LEQ", val: new RegExp(op("<="), STICKY_REGEXP), parenIsForExp: true},
+    {name: "GEQ", val: new RegExp(op(">="), STICKY_REGEXP), parenIsForExp: true},
+    {name: "EQUALEQUAL", val: new RegExp(op("=="), STICKY_REGEXP), parenIsForExp: true},
+    {name: "NEQ", val: new RegExp(op("<>"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "LT", val: new RegExp(op("<"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "GT", val: new RegExp(op(">"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "AND", val: new RegExp(op("and"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "OR", val: new RegExp(op("or"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "IS", val: new RegExp(op("is"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "SATISFIES", val: new RegExp(op("satisfies"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "RAISES", val: new RegExp(op("raises"), STICKY_REGEXP), parenIsForExp: true},
 
     {name: "LBRACK", val: lbrack},
     {name: "RBRACK", val: rbrack},
