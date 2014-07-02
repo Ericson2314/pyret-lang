@@ -87,7 +87,7 @@ define(["../../../lib/jglr/jglr"], function(E) {
 
   function kw(str) { return "^(?:" + str + ")(?![-_a-zA-Z0-9])"; }
   function anyOf(strs) { return "(?:" + strs.join("|") + ")(?![-_a-zA-Z0-9])"; }
-  function op(str) { return "^\\s+" + str + "(?:\\s+)"; }
+  function op(str) { return "^\\s+" + str + "(?=\\s+)"; }
 
   const name = new RegExp("^[_a-zA-Z][-_a-zA-Z0-9]*", STICKY_REGEXP);
   const number = new RegExp("^-?[0-9]+(?:\\.[0-9]+)?", STICKY_REGEXP);
@@ -216,21 +216,21 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "STRING", val: dquot_str},
     {name: "STRING", val: squot_str},
 
-    {name: "PLUS", val: new RegExp(op("\\+"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "DASH", val: new RegExp(op("-"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "STAR", val: new RegExp(op("\\*"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "SLASH", val: new RegExp(op("/"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "LEQ", val: new RegExp(op("<="), STICKY_REGEXP), parenIsForExp: true},
-    {name: "GEQ", val: new RegExp(op(">="), STICKY_REGEXP), parenIsForExp: true},
-    {name: "EQUALEQUAL", val: new RegExp(op("=="), STICKY_REGEXP), parenIsForExp: true},
-    {name: "NEQ", val: new RegExp(op("<>"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "LT", val: new RegExp(op("<"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "GT", val: new RegExp(op(">"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "AND", val: new RegExp(op("and"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "OR", val: new RegExp(op("or"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "IS", val: new RegExp(op("is"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "SATISFIES", val: new RegExp(op("satisfies"), STICKY_REGEXP), parenIsForExp: true},
-    {name: "RAISES", val: new RegExp(op("raises"), STICKY_REGEXP), parenIsForExp: true},
+    {name: "PLUS", val: new RegExp(op("\\+"), STICKY_REGEXP)},
+    {name: "DASH", val: new RegExp(op("-"), STICKY_REGEXP)},
+    {name: "STAR", val: new RegExp(op("\\*"), STICKY_REGEXP)},
+    {name: "SLASH", val: new RegExp(op("/"), STICKY_REGEXP)},
+    {name: "LEQ", val: new RegExp(op("<="), STICKY_REGEXP)},
+    {name: "GEQ", val: new RegExp(op(">="), STICKY_REGEXP)},
+    {name: "EQUALEQUAL", val: new RegExp(op("=="), STICKY_REGEXP)},
+    {name: "NEQ", val: new RegExp(op("<>"), STICKY_REGEXP)},
+    {name: "LT", val: new RegExp(op("<"), STICKY_REGEXP)},
+    {name: "GT", val: new RegExp(op(">"), STICKY_REGEXP)},
+    {name: "AND", val: new RegExp(op("and"), STICKY_REGEXP)},
+    {name: "OR", val: new RegExp(op("or"), STICKY_REGEXP)},
+    {name: "IS", val: new RegExp(op("is"), STICKY_REGEXP)},
+    {name: "SATISFIES", val: new RegExp(op("satisfies"), STICKY_REGEXP)},
+    {name: "RAISES", val: new RegExp(op("raises"), STICKY_REGEXP)},
 
     {name: "LBRACK", val: lbrack},
     {name: "RBRACK", val: rbrack},
