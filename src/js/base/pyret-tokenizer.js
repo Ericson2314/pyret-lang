@@ -87,7 +87,7 @@ define(["../../../lib/jglr/jglr"], function(E) {
 
   function kw(str) { return "^(?:" + str + ")(?![-_a-zA-Z0-9])"; }
   function anyOf(strs) { return "(?:" + strs.join("|") + ")(?![-_a-zA-Z0-9])"; }
-  function op(str) { return "^\\s+" + str + "(?=\\s+)"; }
+  function op(str) { return "^\\s+" + str + "(?=\\s)"; }
 
   const name = new RegExp("^[_a-zA-Z][-_a-zA-Z0-9]*", STICKY_REGEXP);
   const number = new RegExp("^-?[0-9]+(?:\\.[0-9]+)?", STICKY_REGEXP);
