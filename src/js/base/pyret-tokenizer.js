@@ -83,15 +83,13 @@ define(["../../../lib/jglr/jglr"], function(E) {
     return tok_type;
   }
 
-
+  const ws_after = "(?:\\s+)"
 
   function kw(str) { return "^(?:" + str + ")(?![-_a-zA-Z0-9])"; }
   function anyOf(strs) { return "(?:" + strs.join("|") + ")(?![-_a-zA-Z0-9])"; }
-  function op(str) { return "^\\s+" + str + "(?=\\s)"; }
+  function op(str) { return "^\\s+" + str + ws_after; }
 
   function reg(regexp) { return new RegExp(regexp, STICKY_REGEXP) }
-
-  const ws_after = "(?:\\s)"
   const slashable = "[\\\\nrt\"\']"
 
   const Tokens = [
@@ -181,22 +179,22 @@ define(["../../../lib/jglr/jglr"], function(E) {
                                                  "|\\\\[\\\\nrt\"\']" +
                                                  "|[^\\\\\'\n\r])*\'")},
 
-    {name: "CARET",                     val: reg(op("\\^"))},
-    {name: "PLUS",                      val: reg(op("\\+"))},
-    {name: "DASH",                      val: reg(op("-"))},
-    {name: "STAR",                      val: reg(op("\\*"))},
-    {name: "SLASH",                     val: reg(op("/"))},
-    {name: "LEQ",                       val: reg(op("<="))},
-    {name: "GEQ",                       val: reg(op(">="))},
-    {name: "EQUALEQUAL",                val: reg(op("=="))},
-    {name: "NEQ",                       val: reg(op("<>"))},
-    {name: "LT",                        val: reg(op("<"))},
-    {name: "GT",                        val: reg(op(">"))},
-    {name: "AND",                       val: reg(op("and"))},
-    {name: "OR",                        val: reg(op("or"))},
-    {name: "IS",                        val: reg(op("is"))},
-    {name: "SATISFIES",                 val: reg(op("satisfies"))},
-    {name: "RAISES",                    val: reg(op("raises"))},
+    {name: "CARET",                     val: reg(op("\\^")),        parenIsForExp: true},
+    {name: "PLUS",                      val: reg(op("\\+")),        parenIsForExp: true},
+    {name: "DASH",                      val: reg(op("-")),          parenIsForExp: true},
+    {name: "STAR",                      val: reg(op("\\*")),        parenIsForExp: true},
+    {name: "SLASH",                     val: reg(op("/")),          parenIsForExp: true},
+    {name: "LEQ",                       val: reg(op("<=")),         parenIsForExp: true},
+    {name: "GEQ",                       val: reg(op(">=")),         parenIsForExp: true},
+    {name: "EQUALEQUAL",                val: reg(op("==")),         parenIsForExp: true},
+    {name: "NEQ",                       val: reg(op("<>")),         parenIsForExp: true},
+    {name: "LT",                        val: reg(op("<")),          parenIsForExp: true},
+    {name: "GT",                        val: reg(op(">")),          parenIsForExp: true},
+    {name: "AND",                       val: reg(op("and")),        parenIsForExp: true},
+    {name: "OR",                        val: reg(op("or")),         parenIsForExp: true},
+    {name: "IS",                        val: reg(op("is")),         parenIsForExp: true},
+    {name: "SATISFIES",                 val: reg(op("satisfies")),  parenIsForExp: true},
+    {name: "RAISES",                    val: reg(op("raises")),     parenIsForExp: true},
 
     {name: "LBRACK",                    val: reg("^\\[")},
     {name: "RBRACK",                    val: reg("^\\]")},
@@ -211,7 +209,7 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "COMMENT",                   val: reg("^#.*(?:\\n|\\r|\\r\\n|\\n\\r|$)")},
     {name: "WS",                        val: reg("^\\s+"),          parenIsForExp: true},
 
-    {name: "SEMI",                      val: reg("^;" + ws_after),  parenIsForExp: true},
+    {name: "SEMI",                      val: reg("^;")},
     {name: "BACKSLASH",                 val: reg("^\\\\")},
 
     {name: "NAME",                      val: reg("^[_a-zA-Z][-_a-zA-Z0-9]*")},
