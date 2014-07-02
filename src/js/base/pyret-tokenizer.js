@@ -91,65 +91,13 @@ define(["../../../lib/jglr/jglr"], function(E) {
 
   const ws_after = "(?:\\s)"
 
-  const name = new RegExp("^[_a-zA-Z][-_a-zA-Z0-9]*", STICKY_REGEXP);
-  const number = new RegExp("^-?[0-9]+(?:\\.[0-9]+)?", STICKY_REGEXP);
-  const rational = new RegExp("^-?[0-9]+/[0-9]+", STICKY_REGEXP);
-  const parenparen = new RegExp("^\\((?=\\()", STICKY_REGEXP); // NOTE: Don't include the following paren
-  const spaceparen = new RegExp("^\\s+\\(", STICKY_REGEXP);
-  const ws = new RegExp("^\\s+", STICKY_REGEXP);
-  const comment = new RegExp("^#.*(?:\\n|\\r|\\r\\n|\\n\\r|$)", STICKY_REGEXP)
-  const bar = new RegExp("^\\|", STICKY_REGEXP);
-  const langle = new RegExp("^<", STICKY_REGEXP);
-  const rangle = new RegExp("^>", STICKY_REGEXP);
-  const lbrack = new RegExp("^\\[", STICKY_REGEXP);
-  const rbrack = new RegExp("^\\]", STICKY_REGEXP);
-  const lbrace = new RegExp("^\\{", STICKY_REGEXP);
-  const rbrace = new RegExp("^\\}", STICKY_REGEXP);
-  const lparen = new RegExp("^\\(", STICKY_REGEXP);
-  const rparen = new RegExp("^\\)", STICKY_REGEXP);
-  const period = new RegExp("^\\.", STICKY_REGEXP);
-  const bang = new RegExp("^!", STICKY_REGEXP);
-  const percent = new RegExp("^%", STICKY_REGEXP);
-  const comma = new RegExp("^,", STICKY_REGEXP);
-  const thinarrow = new RegExp("^->", STICKY_REGEXP);
-  const thickarrow = new RegExp("^=>" + ws_after, STICKY_REGEXP);
-  const coloncolon = new RegExp("^::" + ws_after, STICKY_REGEXP);
-  const colon = new RegExp("^:", STICKY_REGEXP);
-  const equals = new RegExp("^=", STICKY_REGEXP);
-  const colonequals = new RegExp("^:=", STICKY_REGEXP);
-  const semi = new RegExp("^;" + ws_after, STICKY_REGEXP);
-  const backslash = new RegExp("^\\\\", STICKY_REGEXP);
-
   const slashable = "[\\\\nrt\"\']"
-  const tquot_str =
-    new RegExp("^```(?:" +
-               "\\\\[01234567]{1,3}" +
-               "|\\\\x[0-9a-fA-F]{1,2}" +
-               "|\\\\u[0-9a-fA-f]{1,4}" +
-               "|\\\\[\\\\nrt\"\']" +
-               "|[^`])*```", STICKY_REGEXP); // NOTE: Allow unescaped newlines
-  const dquot_str =
-    new RegExp("^\"(?:" +
-               "\\\\[01234567]{1,3}" +
-               "|\\\\x[0-9a-fA-F]{1,2}" +
-               "|\\\\u[0-9a-fA-f]{1,4}" +
-               "|\\\\[\\\\nrt\"\']" +
-               "|[^\\\\\"\n\r])*\"", STICKY_REGEXP);
-  const squot_str =
-    new RegExp("^\'(?:" +
-               "\\\\[01234567]{1,3}" +
-               "|\\\\x[0-9a-fA-F]{1,2}" +
-               "|\\\\u[0-9a-fA-f]{1,4}" +
-               "|\\\\[\\\\nrt\"\']" +
-               "|[^\\\\\'\n\r])*\'", STICKY_REGEXP);
 
-  const unterminated_string = new RegExp("^[\"\'].*", STICKY_REGEXP);
-
-  const anychar = new RegExp("^[^]", STICKY_REGEXP);
   const Tokens = [
-    {name: "PAREN?", val: parenparen, parenIsForExp: true},
-    {name: "PARENSPACE", val: spaceparen, parenIsForExp: true},
-    {name: "LPAREN?", val: lparen, parenIsForExp: true},
+    // NOTE: Don't include the following paren
+    {name: "PAREN?", val: new RegExp("^\\((?=\\()", STICKY_REGEXP), parenIsForExp: true},
+    {name: "PARENSPACE", val: new RegExp("^\\s+\\(", STICKY_REGEXP), parenIsForExp: true},
+    {name: "LPAREN?", val: new RegExp("^\\(", STICKY_REGEXP), parenIsForExp: true},
 
 
     {name: "IMPORT", val: new RegExp(kw("import"), STICKY_REGEXP)},
@@ -199,22 +147,39 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "END", val: new RegExp(kw("end"), STICKY_REGEXP)},
     {name: "LAZY", val: new RegExp(kw("lazy"), STICKY_REGEXP)},
 
-    {name: "DOT", val: period},
-    {name: "BANG", val: bang},
-    {name: "PERCENT", val: percent},
-    {name: "COMMA", val: comma, parenIsForExp: true},
-    {name: "THINARROW", val: thinarrow},
-    {name: "THICKARROW", val: thickarrow, parenIsForExp: true},
-    {name: "COLONEQUALS", val: colonequals, parenIsForExp: true},
-    {name: "COLONCOLON", val: coloncolon},
-    {name: "COLON", val: colon, parenIsForExp: true},
-    {name: "BAR", val: bar},
+    {name: "DOT", val: new RegExp("^\\.", STICKY_REGEXP)},
+    {name: "BANG", val: new RegExp("^!", STICKY_REGEXP)},
+    {name: "PERCENT", val: new RegExp("^%", STICKY_REGEXP)},
+    {name: "COMMA", val: new RegExp("^,", STICKY_REGEXP), parenIsForExp: true},
+    {name: "THINARROW", val: new RegExp("^->", STICKY_REGEXP)},
+    {name: "THICKARROW", val: new RegExp("^=>" + ws_after, STICKY_REGEXP), parenIsForExp: true},
+    {name: "COLONEQUALS", val: new RegExp("^:=", STICKY_REGEXP), parenIsForExp: true},
+    {name: "COLONCOLON", val: new RegExp("^::" + ws_after, STICKY_REGEXP)},
+    {name: "COLON", val: new RegExp("^:", STICKY_REGEXP), parenIsForExp: true},
+    {name: "BAR", val: new RegExp("^\\|", STICKY_REGEXP)},
 
-    {name: "RATIONAL", val: rational},
-    {name: "NUMBER", val: number},
-    {name: "LONG_STRING", val: tquot_str},
-    {name: "STRING", val: dquot_str},
-    {name: "STRING", val: squot_str},
+    {name: "RATIONAL", val: new RegExp("^-?[0-9]+/[0-9]+", STICKY_REGEXP)},
+    {name: "NUMBER", val: new RegExp("^-?[0-9]+(?:\\.[0-9]+)?", STICKY_REGEXP)},
+
+    // NOTE: Allow unescaped newlines
+    {name: "LONG_STRING", val:  new RegExp("^```(?:" +
+                                           "\\\\[01234567]{1,3}" +
+                                           "|\\\\x[0-9a-fA-F]{1,2}" +
+                                           "|\\\\u[0-9a-fA-f]{1,4}" +
+                                           "|\\\\[\\\\nrt\"\']" +
+                                           "|[^`])*```", STICKY_REGEXP)},
+    {name: "STRING", val: new RegExp("^\"(?:" +
+                                     "\\\\[01234567]{1,3}" +
+                                     "|\\\\x[0-9a-fA-F]{1,2}" +
+                                     "|\\\\u[0-9a-fA-f]{1,4}" +
+                                     "|\\\\[\\\\nrt\"\']" +
+                                     "|[^\\\\\"\n\r])*\"", STICKY_REGEXP)},
+    {name: "STRING", val: new RegExp("^\'(?:" +
+                                     "\\\\[01234567]{1,3}" +
+                                     "|\\\\x[0-9a-fA-F]{1,2}" +
+                                     "|\\\\u[0-9a-fA-f]{1,4}" +
+                                     "|\\\\[\\\\nrt\"\']" +
+                                     "|[^\\\\\'\n\r])*\'", STICKY_REGEXP)},
 
     {name: "CARET", val: new RegExp(op("\\^"), STICKY_REGEXP)},
     {name: "PLUS", val: new RegExp(op("\\+"), STICKY_REGEXP)},
@@ -233,26 +198,26 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "SATISFIES", val: new RegExp(op("satisfies"), STICKY_REGEXP)},
     {name: "RAISES", val: new RegExp(op("raises"), STICKY_REGEXP)},
 
-    {name: "LBRACK", val: lbrack},
-    {name: "RBRACK", val: rbrack},
-    {name: "LBRACE", val: lbrace},
-    {name: "RBRACE", val: rbrace},
-    {name: "RPAREN", val: rparen},
-    {name: "LANGLE", val: langle},
-    {name: "RANGLE", val: rangle},
+    {name: "LBRACK", val: new RegExp("^\\[", STICKY_REGEXP)},
+    {name: "RBRACK", val: new RegExp("^\\]", STICKY_REGEXP)},
+    {name: "LBRACE", val: new RegExp("^\\{", STICKY_REGEXP)},
+    {name: "RBRACE", val: new RegExp("^\\}", STICKY_REGEXP)},
+    {name: "RPAREN", val: new RegExp("^\\)", STICKY_REGEXP)},
+    {name: "LANGLE", val: new RegExp("^<", STICKY_REGEXP)},
+    {name: "RANGLE", val: new RegExp("^>", STICKY_REGEXP)},
 
-    {name: "EQUALS", val: equals, parenIsForExp: true},
+    {name: "EQUALS", val: new RegExp("^=", STICKY_REGEXP), parenIsForExp: true},
 
-    {name: "COMMENT", val: comment},
-    {name: "WS", val: ws, parenIsForExp: true},
+    {name: "COMMENT", val: new RegExp("^#.*(?:\\n|\\r|\\r\\n|\\n\\r|$)", STICKY_REGEXP)},
+    {name: "WS", val: new RegExp("^\\s+", STICKY_REGEXP), parenIsForExp: true},
 
-    {name: "SEMI", val: semi, parenIsForExp: true},
-    {name: "BACKSLASH", val: backslash},
+    {name: "SEMI", val: new RegExp("^;" + ws_after, STICKY_REGEXP), parenIsForExp: true},
+    {name: "BACKSLASH", val: new RegExp("^\\\\", STICKY_REGEXP)},
 
-    {name: "NAME", val: name},
+    {name: "NAME", val: new RegExp("^[_a-zA-Z][-_a-zA-Z0-9]*", STICKY_REGEXP)},
 
-    {name: "UNTERMINATED-STRING", val: unterminated_string},
-    {name: "UNKNOWN", val: anychar},
+    {name: "UNTERMINATED-STRING", val: new RegExp("^[\"\'].*", STICKY_REGEXP)},
+    {name: "UNKNOWN", val: new RegExp("^[^]", STICKY_REGEXP)},
   ];
 
 
