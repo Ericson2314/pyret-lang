@@ -113,7 +113,6 @@ define(["../../../lib/jglr/jglr"], function(E) {
   const thickarrow = new RegExp("^=>", STICKY_REGEXP);
   const coloncolon = new RegExp("^::", STICKY_REGEXP);
   const colon = new RegExp("^:", STICKY_REGEXP);
-  const caret = new RegExp("^\\^", STICKY_REGEXP);
   const equals = new RegExp("^=", STICKY_REGEXP);
   const colonequals = new RegExp("^:=", STICKY_REGEXP);
   const semi = new RegExp("^;", STICKY_REGEXP);
@@ -207,7 +206,6 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "COLONEQUALS", val: colonequals},
     {name: "COLONCOLON", val: coloncolon},
     {name: "COLON", val: colon},
-    {name: "CARET", val: caret},
     {name: "BAR", val: bar},
 
     {name: "RATIONAL", val: rational},
@@ -216,6 +214,7 @@ define(["../../../lib/jglr/jglr"], function(E) {
     {name: "STRING", val: dquot_str},
     {name: "STRING", val: squot_str},
 
+    {name: "CARET", val: new RegExp(op("\\^"), STICKY_REGEXP)},
     {name: "PLUS", val: new RegExp(op("\\+"), STICKY_REGEXP)},
     {name: "DASH", val: new RegExp(op("-"), STICKY_REGEXP)},
     {name: "STAR", val: new RegExp(op("\\*"), STICKY_REGEXP)},
