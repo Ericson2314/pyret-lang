@@ -89,134 +89,137 @@ define(["../../../lib/jglr/jglr"], function(E) {
   function anyOf(strs) { return "(?:" + strs.join("|") + ")(?![-_a-zA-Z0-9])"; }
   function op(str) { return "^\\s+" + str + ws_after; }
 
-  function reg(regexp) { return new RegExp(regexp, STICKY_REGEXP) }
   const slashable = "[\\\\nrt\"\']"
 
   const Tokens = [
     // NOTE: Don't include the following paren
-    {name: "PAREN?",                    val: reg("^\\((?=\\()"),    parenIsForExp: true},
-    {name: "PARENSPACE",                val: reg("^\\s+\\("),       parenIsForExp: true},
-    {name: "LPAREN?",                   val: reg("^\\("),           parenIsForExp: true},
+    {name: "PAREN?",                    val: "^\\((?=\\()",    parenIsForExp: true},
+    {name: "PARENSPACE",                val: "^\\s+\\(",       parenIsForExp: true},
+    {name: "LPAREN?",                   val: "^\\(",           parenIsForExp: true},
 
 
-    {name: "IMPORT",                    val: reg(kw("import"))},
-    {name: "PROVIDE-TYPES",             val: reg(kw("provide-types"))},
-    {name: "PROVIDE",                   val: reg(kw("provide"))},
-    {name: "AS",                        val: reg(kw("as"))},
-    {name: "CONFIRM",                   val: reg(kw("confirm"))},
-    {name: "BLESS",                     val: reg(kw("bless"))},
-    {name: "NEWTYPE",                   val: reg(kw("newtype"))},
-    {name: "TYPE-LET",                  val: reg(kw("type-let"))},
-    {name: "TYPE",                      val: reg(kw("type"))},
-    {name: "VAR",                       val: reg(kw("var"))},
-    {name: "LETREC",                    val: reg(kw("letrec"))},
-    {name: "LET",                       val: reg(kw("let"))},
-    {name: "FUN",                       val: reg(kw("fun"))},
-    {name: "LAM",                       val: reg(kw("lam"))},
-    {name: "TRUE",                      val: reg(kw("true"))},
-    {name: "FALSE",                     val: reg(kw("false"))},
-    {name: "METHOD",                    val: reg(kw("method"))},
-    {name: "DOC",                       val: reg(kw("doc:"))},
-    {name: "WHERE",                     val: reg(kw("where:"))},
-    {name: "CHECKCOLON",                val: reg(kw("check:"))},
-    {name: "CHECK",                     val: reg(kw("check"))},
-    {name: "TRY",                       val: reg(kw("try:"))},
-    {name: "EXCEPT",                    val: reg(kw("except"))},
-    {name: "CASES",                     val: reg(kw("cases"))},
-    {name: "WHEN",                      val: reg(kw("when"))},
-    {name: "ASKCOLON",                  val: reg(kw("ask:"))},
-    {name: "OTHERWISECOLON",            val: reg(kw("otherwise:"))},
-    {name: "IF",                        val: reg(kw("if"))},
-    {name: "THENCOLON",                 val: reg(kw("then:"))},
-    {name: "ELSECOLON",                 val: reg(kw("else:"))},
-    {name: "ELSEIF",                    val: reg(kw("else if"))},
-    {name: "ELSE",                      val: reg(kw("else"))},
-    {name: "DATA",                      val: reg(kw("data"))},
-    {name: "WITH",                      val: reg(kw("with:"))},
-    {name: "SHARING",                   val: reg(kw("sharing:"))},
-    {name: "SHADOW",                    val: reg(kw("shadow"))},
-    {name: "MUTABLE",                   val: reg(kw("mutable"))},
-    {name: "CYCLIC",                    val: reg(kw("cyclic"))},
-    {name: "DATATYPE",                  val: reg(kw("datatype"))},
-    {name: "WITHCONSTRUCTOR",           val: reg(kw("with constructor"))},
-    {name: "GRAPH",                     val: reg(kw("graph:"))},
-    {name: "BLOCK",                     val: reg(kw("block:"))},
-    {name: "FOR",                       val: reg(kw("for"))},
-    {name: "FROM",                      val: reg(kw("from"))},
-    {name: "END",                       val: reg(kw("end"))},
-    {name: "LAZY",                      val: reg(kw("lazy"))},
+    {name: "IMPORT",                    val: kw("import")},
+    {name: "PROVIDE-TYPES",             val: kw("provide-types")},
+    {name: "PROVIDE",                   val: kw("provide")},
+    {name: "AS",                        val: kw("as")},
+    {name: "CONFIRM",                   val: kw("confirm")},
+    {name: "BLESS",                     val: kw("bless")},
+    {name: "NEWTYPE",                   val: kw("newtype")},
+    {name: "TYPE-LET",                  val: kw("type-let")},
+    {name: "TYPE",                      val: kw("type")},
+    {name: "VAR",                       val: kw("var")},
+    {name: "LETREC",                    val: kw("letrec")},
+    {name: "LET",                       val: kw("let")},
+    {name: "FUN",                       val: kw("fun")},
+    {name: "LAM",                       val: kw("lam")},
+    {name: "TRUE",                      val: kw("true")},
+    {name: "FALSE",                     val: kw("false")},
+    {name: "METHOD",                    val: kw("method")},
+    {name: "DOC",                       val: kw("doc:")},
+    {name: "WHERE",                     val: kw("where:")},
+    {name: "CHECKCOLON",                val: kw("check:")},
+    {name: "CHECK",                     val: kw("check")},
+    {name: "TRY",                       val: kw("try:")},
+    {name: "EXCEPT",                    val: kw("except")},
+    {name: "CASES",                     val: kw("cases")},
+    {name: "WHEN",                      val: kw("when")},
+    {name: "ASKCOLON",                  val: kw("ask:")},
+    {name: "OTHERWISECOLON",            val: kw("otherwise:")},
+    {name: "IF",                        val: kw("if")},
+    {name: "THENCOLON",                 val: kw("then:")},
+    {name: "ELSECOLON",                 val: kw("else:")},
+    {name: "ELSEIF",                    val: kw("else if")},
+    {name: "ELSE",                      val: kw("else")},
+    {name: "DATA",                      val: kw("data")},
+    {name: "WITH",                      val: kw("with:")},
+    {name: "SHARING",                   val: kw("sharing:")},
+    {name: "SHADOW",                    val: kw("shadow")},
+    {name: "MUTABLE",                   val: kw("mutable")},
+    {name: "CYCLIC",                    val: kw("cyclic")},
+    {name: "DATATYPE",                  val: kw("datatype")},
+    {name: "WITHCONSTRUCTOR",           val: kw("with constructor")},
+    {name: "GRAPH",                     val: kw("graph:")},
+    {name: "BLOCK",                     val: kw("block:")},
+    {name: "FOR",                       val: kw("for")},
+    {name: "FROM",                      val: kw("from")},
+    {name: "END",                       val: kw("end")},
+    {name: "LAZY",                      val: kw("lazy")},
 
-    {name: "DOT",                       val: reg("^\\.")},
-    {name: "BANG",                      val: reg("^!")},
-    {name: "PERCENT",                   val: reg("^%")},
-    {name: "COMMA",                     val: reg("^,"),             parenIsForExp: true},
-    {name: "THINARROW",                 val: reg("^->")},
-    {name: "THICKARROW",                val: reg("^=>" + ws_after), parenIsForExp: true},
-    {name: "COLONEQUALS",               val: reg("^:="),            parenIsForExp: true},
-    {name: "COLONCOLON",                val: reg("^::" + ws_after)},
-    {name: "COLON",                     val: reg("^:"),             parenIsForExp: true},
-    {name: "BAR",                       val: reg("^\\|")},
+    {name: "DOT",                       val: "^\\."},
+    {name: "BANG",                      val: "^!"},
+    {name: "PERCENT",                   val: "^%"},
+    {name: "COMMA",                     val: "^,",             parenIsForExp: true},
+    {name: "THINARROW",                 val: "^->"},
+    {name: "THICKARROW",                val: "^=>" + ws_after, parenIsForExp: true},
+    {name: "COLONEQUALS",               val: "^:=",            parenIsForExp: true},
+    {name: "COLONCOLON",                val: "^::" + ws_after},
+    {name: "COLON",                     val: "^:",             parenIsForExp: true},
+    {name: "BAR",                       val: "^\\|"},
 
-    {name: "RATIONAL",                  val: reg("^-?[0-9]+/[0-9]+")},
-    {name: "NUMBER",                    val: reg("^-?[0-9]+(?:\\.[0-9]+)?")},
+    {name: "RATIONAL",                  val: "^-?[0-9]+/[0-9]+"},
+    {name: "NUMBER",                    val: "^-?[0-9]+(?:\\.[0-9]+)?"},
     // NOTE: Allow unescaped newlines
-    {name: "LONG_STRING",               val: reg("^```(?:" +
-                                                 "\\\\[01234567]{1,3}" +
-                                                 "|\\\\x[0-9a-fA-F]{1,2}" +
-                                                 "|\\\\u[0-9a-fA-f]{1,4}" +
-                                                 "|\\\\[\\\\nrt\"\']" +
-                                                 "|[^`])*```")},
-    {name: "STRING",                    val: reg("^\"(?:" +
-                                                 "\\\\[01234567]{1,3}" +
-                                                 "|\\\\x[0-9a-fA-F]{1,2}" +
-                                                 "|\\\\u[0-9a-fA-f]{1,4}" +
-                                                 "|\\\\[\\\\nrt\"\']" +
-                                                 "|[^\\\\\"\n\r])*\"")},
-    {name: "STRING",                    val: reg("^\'(?:" +
-                                                 "\\\\[01234567]{1,3}" +
-                                                 "|\\\\x[0-9a-fA-F]{1,2}" +
-                                                 "|\\\\u[0-9a-fA-f]{1,4}" +
-                                                 "|\\\\[\\\\nrt\"\']" +
-                                                 "|[^\\\\\'\n\r])*\'")},
+    {name: "LONG_STRING",               val: "^```(?:" +
+                                             "\\\\[01234567]{1,3}" +
+                                             "|\\\\x[0-9a-fA-F]{1,2}" +
+                                             "|\\\\u[0-9a-fA-f]{1,4}" +
+                                             "|\\\\[\\\\nrt\"\']" +
+                                             "|[^`])*```"},
+    {name: "STRING",                    val: "^\"(?:" +
+                                             "\\\\[01234567]{1,3}" +
+                                             "|\\\\x[0-9a-fA-F]{1,2}" +
+                                             "|\\\\u[0-9a-fA-f]{1,4}" +
+                                             "|\\\\[\\\\nrt\"\']" +
+                                             "|[^\\\\\"\n\r])*\""},
+    {name: "STRING",                    val: "^\'(?:" +
+                                             "\\\\[01234567]{1,3}" +
+                                             "|\\\\x[0-9a-fA-F]{1,2}" +
+                                             "|\\\\u[0-9a-fA-f]{1,4}" +
+                                             "|\\\\[\\\\nrt\"\']" +
+                                             "|[^\\\\\'\n\r])*\'"},
 
-    {name: "CARET",                     val: reg(op("\\^")),        parenIsForExp: true},
-    {name: "PLUS",                      val: reg(op("\\+")),        parenIsForExp: true},
-    {name: "DASH",                      val: reg(op("-")),          parenIsForExp: true},
-    {name: "STAR",                      val: reg(op("\\*")),        parenIsForExp: true},
-    {name: "SLASH",                     val: reg(op("/")),          parenIsForExp: true},
-    {name: "LEQ",                       val: reg(op("<=")),         parenIsForExp: true},
-    {name: "GEQ",                       val: reg(op(">=")),         parenIsForExp: true},
-    {name: "EQUALEQUAL",                val: reg(op("==")),         parenIsForExp: true},
-    {name: "NEQ",                       val: reg(op("<>")),         parenIsForExp: true},
-    {name: "LT",                        val: reg(op("<")),          parenIsForExp: true},
-    {name: "GT",                        val: reg(op(">")),          parenIsForExp: true},
-    {name: "AND",                       val: reg(op("and")),        parenIsForExp: true},
-    {name: "OR",                        val: reg(op("or")),         parenIsForExp: true},
-    {name: "IS",                        val: reg(op("is")),         parenIsForExp: true},
-    {name: "SATISFIES",                 val: reg(op("satisfies")),  parenIsForExp: true},
-    {name: "RAISES",                    val: reg(op("raises")),     parenIsForExp: true},
+    {name: "CARET",                     val: op("\\^"),        parenIsForExp: true},
+    {name: "PLUS",                      val: op("\\+"),        parenIsForExp: true},
+    {name: "DASH",                      val: op("-"),          parenIsForExp: true},
+    {name: "STAR",                      val: op("\\*"),        parenIsForExp: true},
+    {name: "SLASH",                     val: op("/"),          parenIsForExp: true},
+    {name: "LEQ",                       val: op("<="),         parenIsForExp: true},
+    {name: "GEQ",                       val: op(">="),         parenIsForExp: true},
+    {name: "EQUALEQUAL",                val: op("=="),         parenIsForExp: true},
+    {name: "NEQ",                       val: op("<>"),         parenIsForExp: true},
+    {name: "LT",                        val: op("<"),          parenIsForExp: true},
+    {name: "GT",                        val: op(">"),          parenIsForExp: true},
+    {name: "AND",                       val: op("and"),        parenIsForExp: true},
+    {name: "OR",                        val: op("or"),         parenIsForExp: true},
+    {name: "IS",                        val: op("is"),         parenIsForExp: true},
+    {name: "SATISFIES",                 val: op("satisfies"),  parenIsForExp: true},
+    {name: "RAISES",                    val: op("raises"),     parenIsForExp: true},
 
-    {name: "LBRACK",                    val: reg("^\\[")},
-    {name: "RBRACK",                    val: reg("^\\]")},
-    {name: "LBRACE",                    val: reg("^\\{")},
-    {name: "RBRACE",                    val: reg("^\\}")},
-    {name: "RPAREN",                    val: reg("^\\)")},
-    {name: "LANGLE",                    val: reg("^<")},
-    {name: "RANGLE",                    val: reg("^>")},
+    {name: "LBRACK",                    val: "^\\["},
+    {name: "RBRACK",                    val: "^\\]"},
+    {name: "LBRACE",                    val: "^\\{"},
+    {name: "RBRACE",                    val: "^\\}"},
+    {name: "RPAREN",                    val: "^\\)"},
+    {name: "LANGLE",                    val: "^<"},
+    {name: "RANGLE",                    val: "^>"},
 
-    {name: "EQUALS",                    val: reg("^="),             parenIsForExp: true},
+    {name: "EQUALS",                    val: "^=",             parenIsForExp: true},
 
-    {name: "COMMENT",                   val: reg("^#.*(?:\\n|\\r|\\r\\n|\\n\\r|$)")},
-    {name: "WS",                        val: reg("^\\s+"),          parenIsForExp: true},
+    {name: "COMMENT",                   val: "^#.*(?:\\n|\\r|\\r\\n|\\n\\r|$)"},
+    {name: "WS",                        val: "^\\s+",          parenIsForExp: true},
 
-    {name: "SEMI",                      val: reg("^;")},
-    {name: "BACKSLASH",                 val: reg("^\\\\")},
+    {name: "SEMI",                      val: "^;"},
+    {name: "BACKSLASH",                 val: "^\\\\"},
 
-    {name: "NAME",                      val: reg("^[_a-zA-Z][-_a-zA-Z0-9]*")},
+    {name: "NAME",                      val: "^[_a-zA-Z][-_a-zA-Z0-9]*"},
 
-    {name: "UNTERMINATED-STRING",       val: reg("^[\"\'].*")},
-    {name: "UNKNOWN",                   val: reg("^[^]")},
+    {name: "UNTERMINATED-STRING",       val: "^[\"\'].*"},
+    {name: "UNKNOWN",                   val: "^[^]"},
   ];
+  for (var i = 0; i < Tokens.length; i++) {
+    var tok = Tokens[i];
+    tok.val = new RegExp(tok.val, STICKY_REGEXP)
+  }
 
 
   return {
