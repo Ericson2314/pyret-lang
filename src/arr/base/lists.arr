@@ -475,6 +475,8 @@ fun all2(f :: (Any, Any -> Boolean), lst1 :: List, lst2 :: List) -> Boolean:
   end
   help(lst1, lst2)
 where:
+  all2(lam(n, m): false end, [list: 1, 2, 3], empty) is false
+  all2(lam(n, m): true  end, [list: 1, 2, 3], empty) is false
   all2(lam(n, m): n > m end,        [list: 1, 2, 3], [list: 0, 1, 2]) is true
   all2(lam(n, m): (n + m) == 3 end, [list: 1, 2, 3], [list: 2, 1, 0]) is true
   all2(lam(n, m): n < m end,        [list: 1, 2, 3], [list: 0, 1, 2]) is false
