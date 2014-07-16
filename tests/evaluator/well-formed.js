@@ -5,8 +5,8 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
   var rt;
   var P;
 
-  function wf_check(s) { 
-    return "where: blocks only allowed on named function declarations and data, not on " + s; 
+  function wf_check(s) {
+    return "where: blocks only allowed on named function declarations and data, not on " + s;
   }
   function performTest() {
 
@@ -18,11 +18,11 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
       it("should be well-formed", function(done) {
         P.checkEvalsTo("true and false and true", rt.makeBoolean(false));
         P.checkEvalsTo("1 + 2 + 3 + 4", rt.makeNumber(10));
-        P.checkEvalsTo("fun foo():\n" + 
-                       " var x = 10\n" + 
-                       " x\n" + 
-                       "end\n" + 
-                       "10", 
+        P.checkEvalsTo("fun foo():\n" +
+                       " var x = 10\n" +
+                       " x\n" +
+                       "end\n" +
+                       "10",
                        rt.makeNumber(10));
         // returns a number because we are really just checking OK parse/wf,
         // and this is (void) otherwise
@@ -53,19 +53,19 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
         P.wait(done);
       });
       it("malformed blocks", function(done) {
-        P.checkCompileErrorMsg("fun foo():\n" + 
-                               " x = 10\n" + 
-                               "end\n" + 
-                               "10", 
+        P.checkCompileErrorMsg("fun foo():\n" +
+                               " x = 10\n" +
+                               "end\n" +
+                               "10",
                                "Cannot end a block in a let-binding");
-        P.checkCompileErrorMsg("fun foo():\n" + 
-                               " var x = 10\n" + 
-                               "end\n" + 
-                               "10", 
+        P.checkCompileErrorMsg("fun foo():\n" +
+                               " var x = 10\n" +
+                               "end\n" +
+                               "10",
                                "Cannot end a block in a var-binding");
-        P.checkCompileErrorMsg("fun foo():\n" + 
-                               " fun f(): nothing end\n" + 
-                               "end\n" + 
+        P.checkCompileErrorMsg("fun foo():\n" +
+                               " fun f(): nothing end\n" +
+                               "end\n" +
                                "10",
                                "Cannot end a block in a fun-binding");
         P.checkCompileErrorMsg("lam(): x = 5 end", "Cannot end a block in a let-binding");
@@ -78,42 +78,42 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
         P.checkCompileErrorMsg("lam(): 1 is 2 end", "Cannot use `is` outside of a `check` or `where` block");
         P.checkCompileErrorMsg("lam(): 1 raises 2 end", "Cannot use a check-test form outside of a `check` or `where` block");
 
-        P.checkCompileErrorMsg("lam():\n" + 
-                               "  data D:\n" + 
-                               "    | var1()\n" + 
-                               "  end\n" + 
+        P.checkCompileErrorMsg("lam():\n" +
+                               "  data D:\n" +
+                               "    | var1()\n" +
+                               "  end\n" +
                                "end",
                                "top level");
-        P.checkCompileErrorMsg("lam():\n" + 
-                               "  y = 10\n" + 
-                               "  x = 5\n" + 
-                               "  fun f(): nothing end\n" + 
-                               "  data D:\n" + 
-                               "    | var1()\n" + 
-                               "  end\n" + 
+        P.checkCompileErrorMsg("lam():\n" +
+                               "  y = 10\n" +
+                               "  x = 5\n" +
+                               "  fun f(): nothing end\n" +
+                               "  data D:\n" +
+                               "    | var1()\n" +
+                               "  end\n" +
                                "end",
                                "top level");
-        P.checkCompileErrorMsg("lam():\n" + 
-                               "  y = 10\n" + 
-                               "  x = 5\n" + 
-                               "  fun f(): nothing end\n" + 
-                               "  graph:\n" + 
-                               "  z = 5\n" + 
-                               "  end\n" + 
+        P.checkCompileErrorMsg("lam():\n" +
+                               "  y = 10\n" +
+                               "  x = 5\n" +
+                               "  fun f(): nothing end\n" +
+                               "  graph:\n" +
+                               "  z = 5\n" +
+                               "  end\n" +
                                "end",
                                "Cannot end a block with a graph definition");
-        P.checkCompileErrorMsg("block:\n" + 
-                               "  x = 5\n" + 
-                               "  y = 10\n" + 
+        P.checkCompileErrorMsg("block:\n" +
+                               "  x = 5\n" +
+                               "  y = 10\n" +
                                "end",
                                "Cannot end a block in a let-binding");
-        P.checkCompileErrorMsg("block:\n" + 
-                               "  x = 5\n" + 
-                               "  graph: y = 10 end\n" + 
+        P.checkCompileErrorMsg("block:\n" +
+                               "  x = 5\n" +
+                               "  graph: y = 10 end\n" +
                                "end",
                                "Cannot end a block with a graph definition");
-        P.checkCompileErrorMsg("if x < y:\n" + 
-                               "  print('x less than y')\n" + 
+        P.checkCompileErrorMsg("if x < y:\n" +
+                               "  print('x less than y')\n" +
                                "end",
                                "Cannot have an `if` with a single branch");
 
@@ -283,7 +283,3 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
   }
   return { performTest: performTest };
 });
-
-
-
-
