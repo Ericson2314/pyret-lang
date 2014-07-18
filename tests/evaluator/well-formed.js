@@ -280,6 +280,237 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
       });
     });
 
+    // underscore tests
+
+    const exprs = [
+      "provide EXPR end",                                             // s-module
+      "provide-types {_  : 1}",                                       // s-module
+      "provide-types {id : EXPR }",                                   // s-module
+      "import _ as I",                                                // s-module
+      "import I as _",                                                // s-module
+      "import \"i.arr\" as _",                                        // s-module
+
+      "let     id        = EXPR : id end",                            // s-let-expr
+      "let     id :: ANN = 1    : id end",                            // s-let-expr
+      "let     _         = 1    : 1  end",                            // s-let-expr
+
+      "letrec  id        = EXPR : id end",                            // s-letrec
+      "letrec  id :: ANN = 1    : id end",                            // s-letrec
+      "letrec  _         = 1    : 1  end",                            // s-letrec
+      "let var id        = EXPR : id end",                            // s-letrec
+      "let var id :: ANN = 1    : id end",                            // s-letrec
+      "let var _         = 1    : 1  end",                            // s-letrec
+
+      ////////////////////////////////////////////////////////////////// s-hint-exp
+
+      "EXPR<_>",                                                      // s-instantiate
+      "map<ANN>",                                                     // s-instantiate
+
+      ////////////////////////////////////////////////////////////////// s-block
+
+      "block: EXPR end",                                              // s-user-block
+
+      "fun    whale()                : 1    end",                     // s-fun
+      "fun<_> whale()                : 1    end",                     // s-fun
+      "fun    whale(EXPR)            : 1    end",                     // s-fun
+      "fun    whale(e :: ANN)        : 1    end",                     // s-fun
+      "fun    whale(e)        -> ANN : 1    end",                     // s-fun
+      "fun    whale(e)               : EXPR end",                     // s-fun
+      "fun    whale(e)               : 1    where: EXPR end",         // s-fun
+
+      "type _ = Number",                                              // s-type
+      "type T = ANN",                                                 // s-type
+
+      "newtype _ = Number",                                           // s-new-type
+      "newtype N = ANN",                                              // s-new-type
+
+      "var _         = 1",                                            // s-var
+      "var id        = EXPR",                                         // s-var
+      "var id :: ANN = 1",                                            // s-var
+
+      "_         = 1",                                                // s-let
+      "id        = EXPR",                                             // s-let
+      "id :: ANN = 1",                                                // s-let
+
+      "graph: EXPR end",                                              // s-graph
+
+      ////////////////////////////////////////////////////////////////// s-contract
+
+      "when EXPR  : 1    end",                                        // s-when
+      "when false : EXPR end",                                        // s-when
+
+      "_  := 1",                                                      // s-assign
+      "id := EXPR",                                                   // s-assign
+
+      "ask: | EXPR  : 1    end",                                      // s-if-pipe
+      "ask: | false : EXPR end",                                      // s-if-pipe
+
+      "ask: | EXPR  : 1    else: 1    end",                           // s-if-pipe-else
+      "ask: | false : EXPR else: 1    end",                           // s-if-pipe-else
+      "ask: | false : 1    else: EXPR end",                           // s-if-pipe-else
+
+      "if EXPR  : 1    else: 1    end",                               // s-if
+      "if false : EXPR else: 1    end",                               // s-if
+      "if false : 1    else: EXPR end",                               // s-if
+
+      ////////////////////////////////////////////////////////////////// s-if-else
+
+      "cases (ANN)    id   : | cat(a)        => a    end",            // s-cases
+      "cases (Animal) EXPR : | cat(a)        => a    end",            // s-cases
+      "cases (Animal) id   : | _             => 1    end",            // s-cases
+      "cases (Animal) id   : | _(a)          => a    end",            // s-cases
+      "cases (Animal) id   : | cat(a :: ANN) => a    end",            // s-cases
+      "cases (Animal) id   : | cat(a)        => EXPR end",            // s-cases
+
+      "cases (ANN)    id   : | cat(a)        => a    else: 1    end", // s-cases-else
+      "cases (Animal) EXPR : | cat(a)        => a    else: 1    end", // s-cases-else
+      "cases (Animal) id   : | _             => 1    else: 1    end", // s-cases-else
+      "cases (Animal) id   : | _(a)          => a    else: 1    end", // s-cases-else
+      "cases (Animal) id   : | cat(a :: ANN) => a    else: 1    end", // s-cases-else
+      "cases (Animal) id   : | cat(a)        => EXPR else: 1    end", // s-cases-else
+      "cases (Animal) id   : | cat(a)        => a    else: EXPR end", // s-cases-else
+
+      "try: 1    except(_)  : 1    end",                              // s-try
+      "try: EXPR except(id) : 1    end",                              // s-try
+      "try: 1    except(id) : EXPR end",                              // s-try
+
+      "(EXPR + 1    + 1)",                                            // s-op
+      "(1    + EXPR + 1)",                                            // s-op
+      "(1    + 1    + EXPR)",                                         // s-op
+
+      "(EXPR)",                                                       // s-paren
+
+      "lam    ()         : 1    end",                                 // s-fun
+      "lam<_> ()         : 1    end",                                 // s-fun
+      "lam    (EXPR)     : 1    end",                                 // s-fun
+      "lam    (e :: ANN) : 1    end",                                 // s-fun
+      "lam    (e) -> ANN : 1    end",                                 // s-fun
+      "lam    (e)        : EXPR end",                                 // s-fun
+      "lam    (e)        : 1    where: EXPR end",                     // s-fun
+
+      "{ _   ()          : 1    end }",                               // s-method
+      "{ meth(_)         : 1    end }",                               // s-method
+      "{ meth(a :: ANN)  : 1    end }",                               // s-method
+      "{ meth(a)         : EXPR end }",                               // s-method
+
+      "EXPR.{ id : 1    }",                                           // s-extend
+      "a.{    _  : 1    }",                                           // s-extend
+      "a.{    id : EXPR }",                                           // s-extend
+
+      "EXPR!{ id : 1    }",                                           // s-update
+      "a!{    _  : 1    }",                                           // s-update
+      "a!{    id : EXPR }",                                           // s-update
+
+      "{ _  : 1    }",                                                // s-obj
+      "{ id : EXPR }",                                                // s-obj
+
+      ////////////////////////////////////////////////////////////////// s-array
+
+      "EXPR(1)",                                                      // s-app
+      "f(EXPR)",                                                      // a-app
+
+      ////////////////////////////////////////////////////////////////// s-prim-app
+
+      ////////////////////////////////////////////////////////////////// s-prim-val
+
+      "_",                                                            // s-id
+
+      "let var _ = 1: _ end",                                         // s-id-var
+
+      "letrec  _ = 1: _ end",                                         // s-id-var
+
+      ////////////////////////////////////////////////////////////////// s-undefined
+
+      ////////////////////////////////////////////////////////////////// s-srcloc
+
+      "1",                                                            // s-num
+
+      "1/1",                                                          // s-frac
+
+      "false",                                                        // s-frac
+
+      "\"I'm a pyret\"",                                              // s-str
+
+      "EXPR.id",                                                      // s-dot
+      "a._",                                                          // s-dot
+
+      "EXPR!id",                                                      // s-get-bang
+      "a!_",                                                          // s-get-bang
+
+      ////////////////////////////////////////////////////////////////// s-bracket
+
+      "data _         : | cat(a)                               end",  // s-data
+      "data Animal<_> : | cat(a)                               end",  // s-data
+      "data Animal    : | _                                    end",  // s-data
+      "data Animal    : | _(a)                                 end",  // s-data
+      "data Animal    : | cat(a :: ANN)                        end",  // s-data
+      "data Animal    : | cat(a) with: _            : 1    end end",  // s-data
+      "data Animal    : | cat(a) with: id           : EXPR end end",  // s-data
+      "data Animal    : | cat(a) with: id           : EXPR end end",  // s-data
+      "data Animal    : | cat(a) with: id(a)        : 1    end end",  // s-data
+      "data Animal    : | cat(a) with: id(a :: Ann) : 1    end end",  // s-data
+      "data Animal    : | cat(a) with: id(a)        : EXPR end end",  // s-data
+      "data Animal    : | cat(a) sharing: _            : 1     end",  // s-data
+      "data Animal    : | cat(a) sharing: id           : EXPR  end",  // s-data
+      "data Animal    : | cat(a) sharing: id           : EXPR  end",  // s-data
+      "data Animal    : | cat(a) sharing: id(a)        : 1     end",  // s-data
+      "data Animal    : | cat(a) sharing: id(a :: Ann) : 1     end",  // s-data
+      "data Animal    : | cat(a) sharing: id(a)        : EXPR  end",  // s-data
+      "data Animal    : | cat(a) where: EXPR                   end",  // s-data
+
+      ////////////////////////////////////////////////////////////////// s-data-expr
+
+      "for EXPR(z          from a)            : 1    end",            // s-for
+      "for fold(_          from a)            : 1    end",            // s-for
+      "for fold((z :: ANN) from a)            : 1    end",            // s-for
+      "for fold(z          from EXPR)         : 1    end",            // s-for
+      "for fold(z          from a)    -> ANN  : 1    end",            // s-for
+      "for fold(z          from a)            : EXPR end",            // s-for
+
+      "check \"_\",: 1    end",                                       // s-check
+      "check       : EXPR end"                                        // s-check
+    ];
+
+    // "ANN" , "EXPR" => "_  " to stop recursion
+    const anns = [
+      "_",                          // YE DREADED UNDERSCORE, BANE OF THE HIGH SEAS!
+      "Any",                        // a-any
+      "Number",                     // a-name
+      "(_  ,    Number -> Number)", // a-arrow
+      "(Number, _      -> Number)", // a-arrow
+      "(Number, Number -> _  )",    // a-arrow
+      "{ id :: ANN }",              // a-record
+      "List<_  >",                  // a-app
+      "_  <Number>",                // a-app
+      "_      % 1",                 // a-pred
+      "Number % _  ",               // a-pred
+      "_.id",                       // a-dot
+      "ID._"                        // a-dot
+    ];
+
+    function subst_and_test(prog) {
+      if (prog.indexOf("ANN") != -1) {
+        for (var i = 0; i < anns.length; ++i) {
+          subst_and_test(prog.replace("ANN", anns[i]), true);
+        }
+      } else if (prog.indexOf("Expr") != -1) {
+        subst_and_test(prog.replace("EXPR", "_"), true);
+
+//        for (var i = 0; i < exprs.length; ++i) {
+//          subst_and_test(prog.replace(pattern, exprs[i]), true);
+//        }
+
+      } else {
+        it("underscore -- " + prog, function(done) {
+          P.checkCompileErrorMsg(prog, "underscore");
+          P.wait(done);
+        });
+      }
+    }
+
+    for (var i = 0; i < exprs.length; ++i) {
+      subst_and_test(exprs[i]);
+    }
   }
   return { performTest: performTest };
 });
