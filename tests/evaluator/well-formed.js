@@ -278,8 +278,195 @@ define(["js/runtime-anf", "./eval-matchers"], function(rtLib, e) {
         P.checkCompileErrorMsg("0/00000", err);
         P.wait(done);
       });
-    });
 
+      const underscore_tests = [
+        "_",                                                         // YE DREADED UNDERSCORE, BANE OF THE HIGH SEAS!
+
+        "a :: (_,      Number -> Number) = 1",                       // a-arrow
+        "a :: (Number, _      -> Number) = 1",                       // a-arrow
+        "a :: (Number, Number -> _)      = 1",                       // a-arrow
+        "a :: { _  :: Number }           = 1",                       // a-record
+        "a :: { id :: _      }           = 1",                       // a-record
+        "a :: List<_  >                  = 1",                       // a-app
+        "a :: _<Number>                  = 1",                       // a-app
+        "a :: _      % (pred)            = 1",                       // a-pred
+        "a :: Number % (_)               = 1",                       // a-pred
+        "a :: _.id                       = 1",                       // a-dot
+        "a :: ID._                       = 1",                       // a-dot
+
+        "provide _ end",                                             // s-module
+        "provide-types {_  : Number}",                               // s-module
+        "provide-types {id : _}",                                    // s-module
+        "import _         as I",                                     // s-module
+        "import I         as _",                                     // s-module
+        "import \"i.arr\" as _",                                     // s-module
+
+        "let id      = _ : id end",                                  // s-let-expr
+        "let id :: _ = 1 : id end",                                  // s-let-expr
+        "let _       = 1 : 1  end",                                  // s-let-expr
+
+        "letrec  id      = _ : id end",                              // s-letrec
+        "letrec  id :: _ = 1 : id end",                              // s-letrec
+        "letrec  _       = 1 : 1  end",                              // s-letrec
+        "let var id      = _ : id end",                              // s-letrec
+        "let var id :: _ = 1 : id end",                              // s-letrec
+        "let var _       = 1 : 1  end",                              // s-letrec
+
+        "_<_>",                                                      // s-instantiate
+        "map<_>",                                                    // s-instantiate
+
+        "lam(): _ end",                                              // s-block
+
+        "block: _ end",                                              // s-user-block
+
+        "fun    _()                 : 1          end",               // s-fun
+        "fun<_> whale()             : 1          end",               // s-fun
+        "fun    whale(_)            : 1          end",               // s-fun
+        "fun    whale(e :: _)       : 1          end",               // s-fun
+        "fun    whale(e)      -> _  : 1          end",               // s-fun
+        "fun    whale(e)            : _          end",               // s-fun
+        "fun    whale(e)            : 1 where: _ end",               // s-fun
+
+        "type _ = Number",                                           // s-type
+        "type T = _",                                                // s-type
+
+        "newtype _ as Number",                                       // s-new-type
+        "newtype N as _",                                            // s-new-type
+
+        "var _       = 1",                                           // s-var
+        "var id      = _",                                           // s-var
+        "var id :: _ = 1",                                           // s-var
+
+        "_       = 1",                                               // s-let
+        "id      = _",                                               // s-let
+        "id :: _ = 1",                                               // s-let
+
+        "graph: _  = 1    end",                                      // s-graph
+        "graph: id = _ end",                                         // s-graph
+
+        "when _     : 1    end",                                     // s-when
+        "when false : _ end",                                        // s-when
+
+        "_  := 1",                                                   // s-assign
+        "id := _",                                                   // s-assign
+
+        "ask: | _     then: 1 end",                                  // s-if-pipe
+        "ask: | false then: _ end",                                  // s-if-pipe
+
+        "ask: | _     then: 1 | otherwise: 1 end",                   // s-if-pipe-else
+        "ask: | false then: _ | otherwise: 1 end",                   // s-if-pipe-else
+        "ask: | false then: 1 | otherwise: _ end",                   // s-if-pipe-else
+
+        "if _  : 1    end",                                          // s-if
+        "if false : _ end",                                          // s-if
+
+        "if _  : 1    else: 1    end",                               // s-if-else
+        "if false : _ else: 1    end",                               // s-if-else
+        "if false : 1    else: _ end",                               // s-if-else
+
+        "cases (_)      id : | cat(a)      => a end",                // s-cases
+        "cases (Animal) _  : | cat(a)      => a end",                // s-cases
+        "cases (Animal) id : | _           => 1 end",                // s-cases
+        "cases (Animal) id : | _(a)        => a end",                // s-cases
+        "cases (Animal) id : | cat(a :: _) => a end",                // s-cases
+        "cases (Animal) id : | cat(a)      => _ end",                // s-cases
+
+        "cases (_)    id   : | cat(a)      => a | else => 1 end",    // s-cases-else
+        "cases (Animal) _  : | cat(a)      => a | else => 1 end",    // s-cases-else
+        "cases (Animal) id : | _           => 1 | else => 1 end",    // s-cases-else
+        "cases (Animal) id : | _(a)        => a | else => 1 end",    // s-cases-else
+        "cases (Animal) id : | cat(a :: _) => a | else => 1 end",    // s-cases-else
+        "cases (Animal) id : | cat(a)      => _ | else => 1 end",    // s-cases-else
+        "cases (Animal) id : | cat(a)      => a | else => _ end",    // s-cases-else
+
+        "try: 1 except(_)  : 1    end",                              // s-try
+        "try: _ except(id) : 1    end",                              // s-try
+        "try: 1 except(id) : _ end",                                 // s-try
+
+        "(_ + 1 + 1)",                                               // s-op
+        "(1 + _ + 1)",                                               // s-op
+        "(1 + 1 + _)",                                               // s-op
+
+        "(_)",                                                       // s-paren
+
+        "lam<_> ()       : 1          end",                          // s-fun
+        "lam    (_)      : 1          end",                          // s-fun
+        "lam    (e :: _) : 1          end",                          // s-fun
+        "lam    (e) -> _ : 1          end",                          // s-fun
+        "lam    (e)      : _          end",                          // s-fun
+        "lam    (e)      : 1 where: _ end",                          // s-fun
+
+        "{ _   ()       : 1 end }",                                  // s-method
+        "{ meth(_)      : 1 end }",                                  // s-method
+        "{ meth(a :: _) : 1 end }",                                  // s-method
+        "{ meth(a)      : _ end }",                                  // s-method
+
+        "_.{ id : 1    }",                                           // s-extend
+        "a.{    _  : 1    }",                                        // s-extend
+        "a.{    id : _ }",                                           // s-extend
+
+        "_!{ id : 1    }",                                           // s-update
+        "a!{    _  : 1    }",                                        // s-update
+        "a!{    id : _ }",                                           // s-update
+
+        "{ _  : 1    }",                                             // s-obj
+        "{ id : _ }",                                                // s-obj
+
+        "_(1)",                                                      // s-app
+        "f(_)",                                                      // a-app
+
+        "_",                                                         // s-id
+
+        "let var _ = 1: _ end",                                      // s-id-var
+
+        "letrec  _ = 1: _ end",                                      // s-id-var
+
+        "_.id",                                                      // s-dot
+        "a._",                                                       // s-dot
+
+        "_!id",                                                      // s-get-bang
+        "a!_",                                                       // s-get-bang
+
+        "data _         : | cat(a)                             end", // s-data
+        "data Animal<_> : | cat(a)                             end", // s-data
+        "data Animal    : | _                                  end", // s-data
+        "data Animal    : | _(a)                               end", // s-data
+        "data Animal    : | cat(a :: _)                        end", // s-data
+        "data Animal    : | cat(a) with: _          : 1        end", // s-data
+        "data Animal    : | cat(a) with: id         : _        end", // s-data
+        "data Animal    : | cat(a) with: id         : _        end", // s-data
+        "data Animal    : | cat(a) with: id(_)      : 1    end end", // s-data
+        "data Animal    : | cat(a) with: id(a :: _) : 1    end end", // s-data
+        "data Animal    : | cat(a) with: id(a)      : _    end end", // s-data
+        "data Animal    : | cat(a) sharing: _          : 1     end", // s-data
+        "data Animal    : | cat(a) sharing: id         : _     end", // s-data
+        "data Animal    : | cat(a) sharing: id         : _     end", // s-data
+        "data Animal    : | cat(a) sharing: id(_)      : 1 end end", // s-data
+        "data Animal    : | cat(a) sharing: id(a :: _) : 1 end end", // s-data
+        "data Animal    : | cat(a) sharing: id(a)      : _ end end", // s-data
+        "data Animal    : | cat(a) where: _                    end", // s-data
+
+        "for _(z         from a)      : 1 end",                      // s-for
+        "for fold(_      from a)      : 1 end",                      // s-for
+        "for fold(z :: _ from a)      : 1 end",                      // s-for
+        "for fold(z      from _)      : 1 end",                      // s-for
+        "for fold(z      from a) -> _ : 1 end",                      // s-for
+        "for fold(z      from a)      : _ end",                      // s-for
+
+        "check \"_\": 1  end",                                       // s-check
+        "check:        _ end"                                        // s-check
+      ];
+
+      for (var i = 0; i < underscore_tests.length; ++i) {
+        const prog = underscore_tests[i];
+        
+        it("underscore -- " + prog, function(done) {
+          P.checkCompileErrorMsg(prog, "underscore");
+          P.wait(done);
+        });
+      }
+
+    });
   }
   return { performTest: performTest };
 });
