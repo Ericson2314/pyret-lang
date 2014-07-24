@@ -9,16 +9,22 @@ import "compiler/compile-structs.arr" as C
 import "compiler/type-structs.arr" as TS
 import "compiler/type-check-structs.arr" as TCS
 import "compiler/type-constraints.arr" as TC
+import "compiler/type-error-analysis.arr" as TE
 import "compiler/list-aux.arr" as LA
+
+identity                  = LA.identity
+all2-strict               = LA.all2-strict
+map2-strict               = LA.map2-strict
+fold2-strict              = LA.fold2-strict
 
 type Loc                  = SL.Srcloc
 
 type Type                 = TS.Type
+t-top                     = TS.t-top
+t-bot                     = TS.t-bot
 t-name                    = TS.t-name
 t-var                     = TS.t-var
 t-arrow                   = TS.t-arrow
-t-top                     = TS.t-top
-t-bot                     = TS.t-bot
 t-app                     = TS.t-app
 t-record                  = TS.t-record
 
@@ -108,12 +114,6 @@ shadow map2 = lam(f, l1, l2):
                  end
                end
 
-
-
-fun <B> identity(b :: B) -> B:
-  b
-end
-
 fun <B,D> split(ps :: List<Pair<A,B>>) -> Pair<List<A>,List<B>>:
   fun step(p, curr):
     pair(link(p.left, curr.left), link(p.right, curr.right))
@@ -129,9 +129,9 @@ fun to-type-member(field :: A.Member, info :: TCInfo) -> FoldResult<Pair<A.Membe
         fold-result(pair(A.s-data-field(l, name, value), t-member(name, t-top)))
       else:
         synthesis(value, info).fold-bind(
-        lam(new-value, value-typ):
-          fold-result(pair(A.s-data-field(l, name, new-value), t-member(name, value-typ)))
-        end)
+          lam(new-value, value-typ):
+            fold-result(pair(A.s-data-field(l, name, new-value), t-member(name, value-typ)))
+          end)
       end
     | s-mutable-field(l, name, ann, value) =>
       raise("NYI(to-type-member): s-mutable-field")
@@ -164,57 +164,52 @@ fun to-type-variant(variant :: A.Variant, info :: TCInfo) -> FoldResult<Pair<A.V
         split-result      = split(result)
         new-with-members  = split-result.left
         with-type-members = split-result.right
-        new-variant       = A.s-singleton-variant(l, name, new-with-members)
-        type-variant      = t-singleton-variant(l, name, with-type-members)
+        new-variant       = A.s-singleton-variant(name, new-with-members)
+        type-variant      = t-singleton-variant(name, with-type-members)
         fold-result(pair(new-variant, type-variant))
       end
   end
 end
 
 fun record-view(access-loc :: Loc, obj :: A.Expr, obj-typ :: Type,
-                handle :: (A.Expr, Loc, List<TypeMember> -> SynthesisResult),
+                handle :: (A.Expr, TypeMembers -> SynthesisResult),
                 info :: TCInfo
 ) -> SynthesisResult:
   non-obj-err = synthesis-err([list: C.incorrect-type(obj-typ.tostring(), obj-typ.toloc(), "an object type", access-loc)])
   cases(Type) obj-typ:
-    | t-record(l, members) =>
-      handle(obj, l, members)
-    | t-name(l, module-name, id) =>
-      cases(Option<DataType>) TCS.get-data-type(obj-typ, info):
-        | some(data-type) =>
-          handle(obj, l, data-type.fields)
-        | none =>
-          non-obj-err
+    | t-record(members)       => handle(obj, members)
+    | t-name(module-name, id) => cases(Option<DataType>) TCS.get-data-type(obj-typ, info):
+        | some(data-type) => handle(obj, data-type.fields)
+        | none            => non-obj-err
       end
-    | t-app(l, onto, args) =>
-      raise("NYI(record-view): " + torepr(obj-typ))
-    | else =>
-      non-obj-err
+    | t-app(onto, args)       => raise("NYI(record-view): " + torepr(obj-typ))
+    | else                    => non-obj-err
   end
 end
 
 fun synthesis-field(access-loc :: Loc, obj :: A.Expr, obj-typ :: Type, field-name :: String, info :: TCInfo) -> SynthesisResult:
   record-view(access-loc, obj, obj-typ,
-  lam(new-obj, l, obj-fields):
-    cases(Option<TypeMember>) TS.type-members-lookup(obj-fields, field-name):
-      | some(tm) =>
-        synthesis-result(A.s-dot(l, new-obj, field-name), tm.typ)
-      | none =>
-        synthesis-err([list: C.object-missing-field(field-name, "{" + obj-fields.map(_.tostring()).join-str(", ") + "}", l, access-loc)])
-    end
-  end, info)
+    lam(new-obj, obj-fields):
+      cases(Option<TypeMember>) TS.type-members-lookup(obj-fields, field-name):
+        | some(tm) => synthesis-result(A.s-dot(access-expr.loc, new-obj, field-name), tm.typ)
+        | none     => synthesis-err([list:
+            C.object-missing-field(field-name, obj-fields, obj.l, access-loc)])
+      end
+    end, info)
 end
 
 fun mk-variant-constructor(variant :: TypeVariant, creates :: Type, params :: List<TypeVariable>) -> Type:
   cases(TypeVariant) variant:
-    | t-variant(l, _, fields, _) =>
-      t-arrow(l, params, fields.map(_.typ), creates)
-    | t-singleton-variant(l, _, _) =>
-      creates
+    | t-variant(_, fields, _)   => t-arrow(params, fields.map(_.typ), creates)
+    | t-singleton-variant(_, _) => creates
   end
 end
 
-fun synthesis-datatype(l :: Loc, name :: String, namet :: A.Name, params :: List<A.Name>, mixins, variants :: List<A.Variant>, fields :: List<A.Member>, _check :: Option<A.Expr>, info :: TCInfo) -> SynthesisResult:
+fun synthesis-datatype(
+    l :: Loc, name :: String, namet :: A.Name,
+    params :: List<A.Name>, mixins, variants :: List<A.Variant>, fields :: List<A.Member>,
+    _check :: Option<A.Expr>, info :: TCInfo
+) -> SynthesisResult:
   for synth-bind(variants-result from map-result(to-type-variant(_, info), variants)):
     for synth-bind(fields-result from map-result(to-type-member(_, info), fields)):
       if info.branders.has-key(namet.key()):
@@ -243,7 +238,7 @@ fun synthesis-datatype(l :: Loc, name :: String, namet :: A.Name, params :: List
         info.data-exprs.set(brander-typ.tostring(), type-datatype)
 
         new-data-expr  = A.s-data-expr(l, name, namet, params, mixins, variants, split-fields.left, _check)
-        brand-test-typ = t-arrow(_, empty, [list: t-top], t-boolean)
+        brand-test-typ = t-arrow([list: ], [list: t-top], t-boolean)
         data-fields    = link(t-member(name, brand-test-typ(l)),
         for map(variant from variant-typs):
           t-member(variant.name, mk-variant-constructor(variant, brander-typ, t-vars))
@@ -251,7 +246,7 @@ fun synthesis-datatype(l :: Loc, name :: String, namet :: A.Name, params :: List
         for map(variant from variant-typs):
           t-member("is-" + variant.name, brand-test-typ(variant.l))
         end)
-        data-expr-typ  = t-record(l, data-fields)
+        data-expr-typ  = t-record(data-fields)
 
         # Return result of synthesis
         synthesis-result(new-data-expr, data-expr-typ)
@@ -264,57 +259,49 @@ end
 
 fun to-type(in-ann :: A.Ann, info :: TCInfo) -> FoldResult<Option<Type>>:
   cases(A.Ann) in-ann:
-    | a-blank =>
-      fold-result(none)
-    | a-any =>
-      fold-result(some(t-top))
-    | a-name(l, id) =>
-      fold-result(some(t-name(l, none, id.key())))
-    | a-type-var(l, id) =>
-      fold-result(some(t-var(id.key())))
-    | a-arrow(l, args, ret, use-parens) =>
+    | a-blank                           => fold-result(none)
+    | a-any                             => fold-result(some(t-top))
+    | a-name(id)                        => fold-result(some(t-name(l, none, id.key())))
+    | a-type-var(id)                    => fold-result(some(t-var(id.key())))
+    | a-arrow(args, ret, use-parens)    =>
       fun arg-to-type(x):
         to-type(x, info).map(_.or-else(t-bot))
       end
       for bind(arg-typs from map-result(arg-to-type, args)):
         for bind(ret-typ from to-type(ret, info).map(_.or-else(t-top))):
           forall = empty
-          fold-result(some(t-arrow(l, forall, arg-typs, ret-typ)))
+          fold-result(some(t-arrow(forall, arg-typs, ret-typ)))
         end
       end
-    | a-method(l, args, ret) =>
-      raise("a-method not yet handled:" + torepr(in-ann))
-    | a-record(l, fields) =>
+    | a-method(args, ret)               => raise("a-method not yet handled:" + torepr(in-ann))
+    | a-record(fields)                  =>
       fun field-to-type(field):
         to-type-std(field.ann, info).map(t-member(field.name, _))
       end
       for bind(new-fields from map-result(field-to-type, fields)):
         fold-result(some(t-record(l, new-fields)))
       end
-    | a-app(l, ann, args) =>
-      raise("a-app not yet handled:" + torepr(in-ann))
-    | a-pred(l, ann, exp) =>
+    | a-app(ann, args)                  => raise("a-app not yet handled:" + torepr(in-ann))
+    | a-pred(ann, exp)                  =>
       for bind(typ from to-type-std(ann, info)):
-      expect-typ = t-arrow(l, empty, [list: typ], t-boolean)
+        expect-typ = t-arrow(empty, [list: typ], t-boolean)
         cases(CheckingResult) checking(exp, expect-typ, info):
           | checking-err(errs) => errs.map(info.errors.insert)
-          | else => nothing
+          | else               => nothing
         end
         fold-result(some(typ))
       end
-    | a-dot(l, obj, field) =>
-      fold-result(some(t-name(l, some(obj.key()), field)))
-    | a-checked(checked, residual) =>
-      raise("a-checked should not be appearing before type checking!")
+    | a-dot(obj, field)                 => fold-result(some(t-name(some(obj.key()), field)))
+    | a-checked(checked, residual)      => raise("a-checked should not be appearing before type checking!")
   end
 end
 
-fun to-type-std(in-ann :: A.Ann, info :: TCInfo) -> FoldResult<Type>:
-  to-type(in-ann, info).map(_.or-else(t-top))
+fun to-type-std(in-ann :: A.Ann, info :: TCInfo) -> Type:
+  to-type(in-ann, info).or-else(t-top)
 end
 
 fun handle-type-let-binds(bindings :: List<A.TypeLetBind>, info :: TCInfo):
-  for map-result(binding from bindings):
+  for map(binding from bindings):
     cases(A.TypeLetBind) binding:
       | s-type-bind(_, name, ann) =>
         for bind(typ from to-type-std(ann, info)):
@@ -322,7 +309,7 @@ fun handle-type-let-binds(bindings :: List<A.TypeLetBind>, info :: TCInfo):
           fold-result(typ)
         end
       | s-newtype-bind(l, name, namet) =>
-        typ = t-name(l, none, name.key())
+        typ = t-name(none, name.key())
         info.branders.set(namet.key(), typ)
         fold-result(typ)
     end
@@ -350,17 +337,15 @@ fun synthesis-fun(
              end
   for synth-bind(arg-typs from map-result(process-binding(_, t-top, info), args)):
     fun process(new-body :: A.Expr, ret-typ :: Type) -> SynthesisResult:
-      arrow-typ = t-arrow(A.dummy-loc, forall, arg-typs, ret-typ)
+      arrow-typ = t-arrow(forall, arg-typs, ret-typ)
       new-fun = recreate(args, ret-ann, new-body)
       synthesis-result(new-fun, arrow-typ)
     end
   
     for synth-bind(maybe-ret from to-type(ret-ann, info)):
       cases(Option<Type>) maybe-ret:
-        | some(ret-typ) =>
-          checking(body, ret-typ, info).synth-bind(process(_, ret-typ))
-        | none =>
-          synthesis(body, info).bind(process)
+        | some(ret-typ) =>  checking(body, ret-typ, info).synth-bind(process(_, ret-typ))
+        | none          => synthesis(body,          info)      .bind(process)
       end
     end
   end
@@ -882,10 +867,9 @@ fun checking(e :: A.Expr, expect-typ :: Type, info :: TCInfo) -> CheckingResult:
       checking(answer, expect-typ, info)
         .map(A.s-module(l, _, provides, types, checks))
     | s-type-let-expr(l, binds, body) =>
-      for check-bind(_ from handle-type-let-binds(binds, info)):
-        checking(body, expect-typ, info)
-          .map(A.s-type-let-expr(l, binds, _))
-      end
+      handle-type-let-binds(binds, info)
+      checking(body, expect-typ, info)
+        .map(A.s-type-let-expr(l, binds, _))
     | s-let-expr(l, bindings, body) =>
       action = synthesis-let-bind(_, info)
       for check-bind(new-bindings from map-synthesis(action, bindings)):
