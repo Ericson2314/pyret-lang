@@ -119,58 +119,46 @@ end
 
 fun satisfies-type(here :: Type, there :: Type, info :: TCInfo) -> Boolean:
   cases(Type) here:
-    | t-name(_, a-mod, a-id) =>
-      cases(Type) there:
-        | t-top => true
-        | t-name(_, b-mod, b-id) =>
-          (a-mod == b-mod) and (a-id == b-id)
-        | t-record(_, there-fields) =>
-          cases(Option<Type>) TCS.get-data-type(here, info):
-            | some(data-type) =>
-              fields-satisfy(data-type.fields, there-fields, info)
-            | none =>
-              false
+    | t-top => is-t-top(other)
+    | t-bot => true
+    | t-name(a-mod, a-id)              => cases(Type) there:
+        | t-top                 => true
+        | t-name(b-mod, b-id)   => (a-mod == b-mod) and (a-id == b-id)
+        | t-record(b-fields)    => cases(Option<Type>) TCS.get-data-type(here, info):
+            | some(data-type) => fields-satisfy(data-type.fields, b-fields, info)
+            | none            => false
           end
         | else => false
       end
-    | t-var(a-id) =>
-      cases(Type) there:
-        | t-top => true
-        | t-var(b-id) => a-id == b-id
-        | else => false
+    | t-var(a-id)                      => cases(Type) there:
+        | t-top                 => true
+        | t-var(b-id)           => a-id == b-id
+        | else                  => false
       end
-    | t-arrow(_, a-forall, a-args, a-ret) =>
-      cases(Type) there:
-        | t-top => true
-        | t-arrow(_, b-forall, b-args, b-ret) =>
+    | t-arrow(a-forall, a-args, a-ret) => cases(Type) there:
+        | t-top                 => true
+        | t-arrow(b-forall, b-args, b-ret) =>
           all2-strict(_ == _, a-forall, b-forall)
                 # order is important because contravariance!
             and all2-strict(satisfies-type(_, _, info), b-args, a-args)
             and satisfies-type(a-ret, b-ret, info)
-        | else => false
+        | else                  => false
       end
-    | t-app(_, a-onto, a-args) =>
-      cases(Type) there:
-        | t-top => true
-        | t-app(_, b-onto, b-args) =>
-          a-onto._equal(b-onto) and all2-strict(lam(a, b): a.equal(b);, a-args, b-args)
-        | t-record(_, there-fields) =>
+    | t-app(a-onto, a-args)            => cases(Type) there:
+        | t-top                 => true
+        | t-app(b-onto, b-args) =>
+          (a-onto._equal(b-onto) and all2-strict(lam(a, b): a.equal(b);, a-args, b-args)
+        | t-record(b-fields)    =>
           cases(Option<Type>) TCS.get-data-type(here, info):
-            | some(data-type) =>
-              fields-satisfy(data-type.fields, there-fields, info)
-            | none =>
-              false
+            | some(data-type) => fields-satisfy(data-type.fields, b-fields, info)
+            | none            => false
           end
-        | else => false
+        | else                  => false
       end
-    | t-top => is-t-top(there)
-    | t-bot => true
-    | t-record(_, fields) =>
-      cases(Type) there:
-        | t-top => true
-        | t-record(_, there-fields) =>
-          fields-satisfy(fields, there-fields, info)
-        | else => false
+    | t-record(a-fields)               => cases(Type) there:
+        | t-top                 => true
+        | t-record(b-fields)    => fields-satisfy(a-fields, b-fields, info)
+        | else                  => false
       end
   end
 end
@@ -225,14 +213,14 @@ fun least-upper-bound(s :: Type, t :: Type, info :: TCInfo) -> Type:
     s
   else:
     cases(Type) s:
-      | t-arrow(_, s-forall, s-args, s-ret) =>
+      | t-arrow(s-forall, s-args, s-ret) =>
         cases(Type) t:
-          | t-arrow(_, t-forall, t-args, t-ret) =>
+          | t-arrow(t-forall, t-args, t-ret) =>
             if s-forall == t-forall:
               cases (Option<List<Type>>) map2-strict(greatest-lower-bound(_, _, info), s-args, t-args):
                 | some(m-args) =>
                   j-typ  = least-upper-bound(s-ret, t-ret, info)
-                  t-arrow(A.dummy-loc, s-forall, m-args, j-typ)
+                  t-arrow(s-forall, m-args, j-typ)
                 | else => t-top
               end
             else:
@@ -240,20 +228,20 @@ fun least-upper-bound(s :: Type, t :: Type, info :: TCInfo) -> Type:
             end
           | else => t-top
         end
-      | t-app(_, s-onto, s-args) =>
+      | t-app(s-onto, s-args) =>
         cases(Type) t:
-          | t-app(_, t-onto, t-args) =>
+          | t-app(t-onto, t-args) =>
             if (s-onto == t-onto) and (s-args == t-args):
-              t-app(A.dummy-loc, s-onto, s-args)
+              t-app(s-onto, s-args)
             else:
               t-top
             end
           | else => t-top
         end
-      | t-record(_, s-fields) =>
+      | t-record(s-fields) =>
         cases(Type) t:
-          | t-record(_, t-fields) =>
-            t-record(A.dummy-loc, meet-fields(s-fields, t-fields, info))
+          | t-record(t-fields) =>
+            t-record(meet-fields(s-fields, t-fields, info))
           | else => t-top
         end
       | else => t-top
@@ -268,12 +256,12 @@ fun greatest-lower-bound(s :: Type, t :: Type, info :: TCInfo) -> Type:
     t
   else: cases(Type) s:
       | t-arrow(s-l, s-forall, s-args, s-ret) => cases(Type) t:
-          | t-arrow(_, t-forall, t-args, t-ret) =>
+          | t-arrow(t-forall, t-args, t-ret) =>
             if s-forall == t-forall:
               cases (Option<List<Type>>) map2-strict(least-upper-bound(_, _, info), s-args, t-args):
                 | some(m-args) =>
                   j-typ  = greatest-lower-bound(s-ret, t-ret, info)
-                  t-arrow(A.dummy-loc, s-forall, m-args, j-typ)
+                  t-arrow(s-forall, m-args, j-typ)
                 | else => t-bot
               end
             else:
@@ -281,18 +269,18 @@ fun greatest-lower-bound(s :: Type, t :: Type, info :: TCInfo) -> Type:
             end
           | else => t-bot
         end
-      | t-app(_, s-onto, s-args) => cases(Type) t:
-          | t-app(_, t-onto, t-args) =>
+      | t-app(s-onto, s-args) => cases(Type) t:
+          | t-app(t-onto, t-args) =>
             if (s-onto == t-onto) and (s-args == t-args):
-              t-app(A.dummy-loc, s-onto, s-args)
+              t-app(s-onto, s-args)
             else:
               t-bot
             end
           | else => t-bot
         end
-      | t-record(_, s-fields) => cases(Type) t:
-          | t-record(_, t-fields) =>
-            t-record(A.dummy-loc, join-fields(s-fields, t-fields, info))
+      | t-record(s-fields) => cases(Type) t:
+          | t-record(t-fields) =>
+            t-record(join-fields(s-fields, t-fields, info))
           | else => t-bot
         end
       | else => t-bot
@@ -314,7 +302,7 @@ fun free-vars(t :: Type, binds :: Bindings) -> Set<Type>:
     end
   end
   cases(Type) t:
-    | t-name(l, module-name, id) =>
+    | t-name(module-name, id) =>
       cases(Option<String>) module-name:
         | none =>
           [set: ]
@@ -323,14 +311,14 @@ fun free-vars(t :: Type, binds :: Bindings) -> Set<Type>:
       end
     | t-var(id) =>
       add-free-var(t)
-    | t-arrow(l, forall, args, ret) =>
+    | t-arrow(forall, args, ret) =>
       new-binds = for fold(base from binds, typ from forall):
         binds.set(typ.id, typ.upper-bound)
       end
       args
         .map(free-vars(_, new-binds))
         .foldl(union, free-vars(ret, new-binds))
-    | t-app(l, onto, args) =>
+    | t-app(onto, args) =>
       args
         .map(free-vars(_, binds))
         .foldl(union, free-vars(onto, binds))
@@ -368,11 +356,11 @@ fun eliminate-variables(typ :: Type, binds :: Bindings, to-remove :: Set<Type>,
     to-typ-move(typ, binds, to-remove)
   else:
     cases(Type) typ:
-      | t-name(_, _, _) =>
+      | t-name(_, _) =>
         typ
       | t-var(_) =>
         typ
-      | t-arrow(l, forall, args, ret) =>
+      | t-arrow(forall, args, ret) =>
         bounded-free = for fold(base from sets.empty-list-set, x from forall):
                          free = free-vars(x.upper-bound, binds)
                          base.union(free)
@@ -385,7 +373,7 @@ fun eliminate-variables(typ :: Type, binds :: Bindings, to-remove :: Set<Type>,
                        end
           new-args = args.map(there(_, new-binds, to-remove))
           new-ret  = here(ret, new-binds, to-remove)
-          t-arrow(l, forall, new-args, new-ret)
+          t-arrow(forall, new-args, new-ret)
         else:
           to-typ
         end
@@ -509,7 +497,7 @@ fun is-constant(x :: Type % (is-t-var), r :: Type) -> Boolean:
     false
   else:
     cases(Type) r:
-      | t-arrow(l, forall, args, ret) =>
+      | t-arrow(forall, args, ret) =>
         args-okay = for fold(base from true, arg from args):
                       base and is-constant(x, arg)
                     end
@@ -542,7 +530,7 @@ fun is-covariant(x :: Type % (is-t-var), r :: Type) -> Boolean:
     true
   else:
     cases(Type) r:
-      | t-arrow(l, forall, args, ret) =>
+      | t-arrow(forall, args, ret) =>
         var arg-is-contravariant = false
         args-okay = for fold(base from true, arg from args):
                       if is-constant(x, arg):
@@ -580,7 +568,7 @@ end
 
 fun is-contravariant(x :: Type % (is-t-var), r :: Type) -> Boolean:
   cases(Type) r:
-    | t-arrow(l, forall, args, ret) =>
+    | t-arrow(forall, args, ret) =>
       var arg-is-covariant = false
       args-okay = for fold(base from true, arg from args):
                     if is-constant(x, arg):
@@ -617,7 +605,7 @@ end
 
 fun is-invariant(x :: Type % (is-t-var), r :: Type) -> Boolean:
   cases(Type) r:
-    | t-arrow(l, forall, args, ret) =>
+    | t-arrow(forall, args, ret) =>
       var arg-is-invariant = false
       var arg-is-covariant = false
       for each(arg from args):
@@ -672,7 +660,7 @@ fun is-rigid-under(r :: Type, binds :: Bindings) -> Boolean:
                    end) or
   not(is-bottom-variable(r, binds)) or
   cases(Type) r:
-    | t-arrow(_, forall, arg-typs, ret) =>
+    | t-arrow(forall, arg-typs, ret) =>
       # TODO(cody): Implement this
       raise("t-arrow not yet handled in is-rigid-under")
     | else =>
