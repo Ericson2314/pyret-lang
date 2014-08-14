@@ -175,6 +175,7 @@ data DataType:
 end
 
 data Type:
+  | t-unknown
   | t-name(l :: A.Loc, module-name :: Option<String>, id :: String)
   | t-var(id :: String)
   | t-arrow(l :: A.Loc, forall :: List<TypeVariable>, args :: List<Type>, ret :: Type)
